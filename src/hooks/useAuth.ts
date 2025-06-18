@@ -23,21 +23,21 @@ const getAuthHeaders = () => {
 };
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   avatar?: string;
-  notifications: number;
-  phone?: string;
-  birthDate: string;
-  address?: string;
-  city?: string;
-  country?: string;
-  postalCode: string;
-  telegram?: string;
-  whatsapp?: string;
-  preferredContact: string;
-  language?: string;
+  notifications: boolean;
+  phone?: string | null;
+  birthDate?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  postalCode?: string | null;
+  telegram?: string | null;
+  whatsapp?: string | null;
+  preferredContact?: string | null;
+  language?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -214,19 +214,20 @@ export const useAuth = () => {
         throw new Error('Пароли не совпадают');
       }
 
-      if (!data.name.trim()) {
-        throw new Error('Имя обязательно для заполнения');
-      }
-
       const response = await fetch(`${API_URL}/auth/register`, {
         ...fetchConfig,
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          confirm_password: data.confirmPassword
+        })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка при регистрации');
+        throw new Error(errorData.message || 'Ошибка при регистрации');
       }
 
       const { token, user } = await response.json();

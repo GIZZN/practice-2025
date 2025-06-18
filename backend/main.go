@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -22,7 +23,7 @@ func main() {
 
 	// Инициализация базы данных
 	if err := db.InitDB(); err != nil {
-		
+
 		log.Fatal("Error initializing database:", err)
 	}
 	defer db.DB.Close()
@@ -44,11 +45,11 @@ func main() {
 				"https://practice-2025.vercel.app",
 				"https://practice-2025-git-main.vercel.app",
 				"https://practice-2025-*.vercel.app",
+				"https://92.246.76.171:8080",
 			}
 			origin := r.Header.Get("Origin")
 
 			for _, allowedOrigin := range allowedOrigins {
-
 				if origin == allowedOrigin {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
 					break
@@ -81,5 +82,8 @@ func main() {
 	}
 
 	fmt.Printf("Server is running on port %s...\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Fatal(http.ListenAndServeTLS(":"+port,
+		"/etc/letsencrypt/live/92.246.76.171/fullchain.pem",
+		"/etc/letsencrypt/live/92.246.76.171/privkey.pem",
+		router))
 }

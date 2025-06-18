@@ -432,8 +432,8 @@ export const Header = memo(() => {
                           {user?.name?.[0]?.toUpperCase() || 'U'}
                         </div>
                       )}
-                      {user && user.notifications > 0 && (
-                        <NotificationBadge count={user.notifications} />
+                      {user && user.notifications && (
+                        <NotificationBadge count={1} />
                       )}
                     </div>
                     <span className={styles.userName}>{user?.name}</span>

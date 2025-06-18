@@ -16,7 +16,7 @@ const fetchConfig = {
 };
 
 // Функция для выполнения fetch запроса с таймаутом
-const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 10000) => {
+const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 30000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 

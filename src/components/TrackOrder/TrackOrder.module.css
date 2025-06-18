@@ -1,0 +1,357 @@
+.container {
+  min-height: calc(100vh - 190px);
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #0f0f0f;
+}
+
+.trackingBox {
+  width: 100%;
+  max-width: 1200px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.trackingBox::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 24px;
+  padding: 1px;
+  background: linear-gradient(45deg, 
+    rgba(255, 51, 102, 0.5) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(76, 0, 255, 0.5) 100%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #FF3366, #FF6B6B);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.searchSection {
+  margin-bottom: 3rem;
+}
+
+.inputWrapper {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.examples {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
+.input {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #FF3366;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.button {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #FF3366, #FF6B6B);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #FF3366;
+  text-align: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 51, 102, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.errorIcon {
+  font-size: 1.2rem;
+}
+
+.resultContainer {
+  margin-top: 2rem;
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 2rem;
+}
+
+.timeline {
+  padding-left: 2rem;
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, 
+    #FF3366,
+    #FF6B6B,
+    rgba(255, 255, 255, 0.1)
+  );
+}
+
+.timelineItem {
+  position: relative;
+  padding-bottom: 2rem;
+}
+
+.timelinePoint {
+  position: absolute;
+  left: -2.1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF3366, #FF6B6B);
+  border: 3px solid #0f0f0f;
+  box-shadow: 0 0 0 4px rgba(255, 51, 102, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.timelinePoint:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px rgba(255, 51, 102, 0.3);
+}
+
+.timelineContent {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-left: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statusTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 0.5rem;
+}
+
+.statusDate, .statusLocation {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  font-size: 1rem;
+  color: #FF3366;
+}
+
+.statusDescription {
+  color: white;
+  margin: 0 0 0.5rem;
+}
+
+.estimatedDelivery {
+  margin: 0.5rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #4ECDC4;
+  font-size: 0.9rem;
+}
+
+.additionalInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.infoCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.infoCardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.infoGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.infoLabel {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.courierInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.courierName {
+  font-size: 1.1rem;
+  color: white;
+  font-weight: 500;
+}
+
+.courierContact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.starRating {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.star {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 1.2rem;
+}
+
+.star.filled {
+  color: #FFD700;
+}
+
+.ratingNumber {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-left: 0.3rem;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    grid-template-columns: 1fr;
+  }
+
+  .additionalInfo {
+    margin-top: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .trackingBox {
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .inputWrapper {
+    flex-direction: column;
+  }
+
+  .button {
+    width: 100%;
+  }
+
+  .timeline {
+    padding-left: 1.5rem;
+  }
+
+  .timelinePoint {
+    left: -1.8rem;
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.9rem;
+    border-width: 2px;
+  }
+} 

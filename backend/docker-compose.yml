@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  backend:
+    image: gizzn/delivery_service:tagname
+    container_name: delivery_app
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=delivery_service
+      - JWT_SECRET=SosIk
+      - PORT=8080
+      - ALLOWED_ORIGINS=https://practice-2025.vercel.app,https://practice-2025-git-main.vercel.app

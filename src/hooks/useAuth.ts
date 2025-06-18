@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://92.246.76.171:8080/api';
 
 // Обновляем конфигурацию для fetch запросов
 const fetchConfig = {
@@ -10,6 +10,27 @@ const fetchConfig = {
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
+  }
+};
+
+// Функция для выполнения fetch запроса с таймаутом
+const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 10000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error: any) {
+    clearTimeout(id);
+    if (error.name === 'AbortError') {
+      throw new Error('Превышено время ожидания запроса. Пожалуйста, проверьте ваше интернет-соединение и попробуйте снова.');
+    }
+    throw error;
   }
 };
 
@@ -214,16 +235,20 @@ export const useAuth = () => {
         throw new Error('Пароли не совпадают');
       }
 
-      const response = await fetch(`${API_URL}/auth/register`, {
-        ...fetchConfig,
-        method: 'POST',
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-          confirm_password: data.confirmPassword
-        })
-      });
+      const response = await fetchWithTimeout(
+        `${API_URL}/auth/register`,
+        {
+          ...fetchConfig,
+          method: 'POST',
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            password: data.password,
+            confirm_password: data.confirmPassword
+          })
+        },
+        15000 // увеличиваем таймаут до 15 секунд для регистрации
+      );
 
       if (!response.ok) {
         const errorData = await response.json();

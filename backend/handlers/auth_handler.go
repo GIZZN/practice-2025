@@ -5,6 +5,8 @@ import (
 	"delivery-service/models"
 	"delivery-service/services"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -17,19 +19,58 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	var req models.RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "неверный формат данных", http.StatusBadRequest)
+	log.Printf("Получен запрос на регистрацию от %s", r.RemoteAddr)
+
+	// Проверяем метод запроса
+	if r.Method != http.MethodPost {
+		http.Error(w, "Метод не разрешен", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Проверяем Content-Type
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "application/json" {
+		http.Error(w, "Требуется Content-Type: application/json", http.StatusUnsupportedMediaType)
+		return
+	}
+
+	var req models.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Ошибка декодирования JSON: %v", err)
+		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
+		return
+	}
+
+	// Валидация данных
+	if req.Name == "" || req.Email == "" || req.Password == "" || req.ConfirmPassword == "" {
+		http.Error(w, "Все поля обязательны для заполнения", http.StatusBadRequest)
+		return
+	}
+
+	if req.Password != req.ConfirmPassword {
+		http.Error(w, "Пароли не совпадают", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Попытка регистрации пользователя: %s", req.Email)
 
 	response, err := h.authService.Register(&req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("Ошибка при регистрации пользователя %s: %v", req.Email, err)
+		errMsg := fmt.Sprintf("Ошибка при регистрации: %v", err)
+		http.Error(w, errMsg, http.StatusBadRequest)
 		return
 	}
 
-	middleware.SendJSON(w, http.StatusCreated, response)
+	log.Printf("Пользователь успешно зарегистрирован: %s", req.Email)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Ошибка при отправке ответа: %v", err)
+		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {

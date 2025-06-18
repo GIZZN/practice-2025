@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    image: gizzn/delivery_service:tagname
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: delivery_app
     restart: unless-stopped
     network_mode: "host"

@@ -5,8 +5,12 @@ import (
 	"delivery-service/repository"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"regexp"
+	"strings"
 	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -17,12 +21,17 @@ var (
 	ErrUserExists         = errors.New("пользователь с таким email уже существует")
 	ErrInvalidToken       = errors.New("недействительный токен")
 	ErrMissingJWTSecret   = errors.New("отсутствует JWT_SECRET в переменных окружения")
+	ErrInvalidEmail       = errors.New("некорректный email")
+	ErrInvalidPassword    = errors.New("пароль должен содержать минимум 8 символов")
+	ErrInvalidName        = errors.New("имя должно содержать минимум 2 символа")
 )
 
 const (
 	bcryptCost     = 12
 	tokenExpiresIn = time.Hour * 24 * 7
 )
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 type AuthService struct {
 	userRepo *repository.UserRepository
@@ -36,37 +45,55 @@ func NewAuthService(userRepo *repository.UserRepository) *AuthService {
 }
 
 func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthResponse, error) {
+	log.Printf("Начало регистрации пользователя: %s", req.Email)
+
 	if err := s.validateRegistration(req); err != nil {
+		log.Printf("Ошибка валидации при регистрации: %v", err)
 		return nil, err
 	}
 
+	// Нормализация данных
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.Name = strings.TrimSpace(req.Name)
+
 	existingUser, err := s.userRepo.GetUserByEmail(req.Email)
 	if err != nil && !errors.Is(err, repository.ErrUserNotFound) {
+		log.Printf("Ошибка при проверке существующего пользователя: %v", err)
 		return nil, fmt.Errorf("ошибка при проверке существующего пользователя: %w", err)
 	}
 	if existingUser != nil {
+		log.Printf("Попытка регистрации с существующим email: %s", req.Email)
 		return nil, ErrUserExists
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
 	if err != nil {
+		log.Printf("Ошибка при хешировании пароля: %v", err)
 		return nil, fmt.Errorf("ошибка при хешировании пароля: %w", err)
 	}
 
+	now := time.Now()
 	user := &models.User{
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: string(hashedPassword),
+		Name:          req.Name,
+		Email:         req.Email,
+		PasswordHash:  string(hashedPassword),
+		Notifications: true,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 
 	if err := s.userRepo.CreateUser(user); err != nil {
+		log.Printf("Ошибка при создании пользователя: %v", err)
 		return nil, fmt.Errorf("ошибка при создании пользователя: %w", err)
 	}
 
 	token, err := s.generateToken(user)
 	if err != nil {
+		log.Printf("Ошибка при генерации токена: %v", err)
 		return nil, fmt.Errorf("ошибка при генерации токена: %w", err)
 	}
+
+	log.Printf("Пользователь успешно зарегистрирован: %s", req.Email)
 
 	return &models.AuthResponse{
 		Token: token,
@@ -173,15 +200,26 @@ func (s *AuthService) validateRegistration(req *models.RegisterRequest) error {
 	if req == nil {
 		return repository.ErrInvalidInput
 	}
-	if req.Name == "" || req.Email == "" || req.Password == "" || req.ConfirmPassword == "" {
-		return repository.ErrInvalidInput
+
+	// Проверка имени
+	if len(strings.TrimSpace(req.Name)) < 2 {
+		return ErrInvalidName
 	}
+
+	// Проверка email
+	if !emailRegex.MatchString(req.Email) {
+		return ErrInvalidEmail
+	}
+
+	// Проверка пароля
+	if len(req.Password) < 8 {
+		return ErrInvalidPassword
+	}
+
 	if req.Password != req.ConfirmPassword {
 		return ErrPasswordMismatch
 	}
-	if len(req.Password) < 8 {
-		return errors.New("пароль должен содержать минимум 8 символов")
-	}
+
 	return nil
 }
 

@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     whatsapp VARCHAR(100),
     preferred_contact VARCHAR(50),
     language VARCHAR(10),
-    notifications INTEGER DEFAULT 0,
+    notifications BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

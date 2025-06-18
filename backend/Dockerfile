@@ -30,6 +30,10 @@ RUN apk --no-cache add ca-certificates
 
 # Create non-root user
 RUN adduser -D appuser
+
+# Create directory for .env and set permissions
+RUN mkdir -p /app && chown -R appuser:appuser /app
+
 USER appuser
 
 # Expose the port

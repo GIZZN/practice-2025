@@ -9,8 +9,10 @@ const fetchConfig = {
   credentials: 'include' as const,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
+    'Accept': 'application/json',
+    'Origin': typeof window !== 'undefined' ? window.location.origin : ''
+  },
+  mode: 'cors' as const
 };
 
 // Функция для выполнения fetch запроса с таймаутом
@@ -19,17 +21,51 @@ const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 100
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
+    console.log('Отправка запроса на:', url);
+    console.log('С данными:', options.body);
+    
     const response = await fetch(url, {
       ...options,
       signal: controller.signal
     });
+    
     clearTimeout(id);
+    
+    console.log('Получен ответ:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
+    // Если ответ не OK, пробуем прочитать тело ответа
+    if (!response.ok) {
+      let errorMessage = 'Ошибка сервера';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || 'Неизвестная ошибка';
+      } catch (e) {
+        console.error('Не удалось прочитать тело ошибки:', e);
+      }
+      throw new Error(errorMessage);
+    }
+
     return response;
   } catch (error: any) {
     clearTimeout(id);
+    console.error('Ошибка запроса:', error);
+
     if (error.name === 'AbortError') {
       throw new Error('Превышено время ожидания запроса. Пожалуйста, проверьте ваше интернет-соединение и попробуйте снова.');
     }
+    
+    if (!navigator.onLine) {
+      throw new Error('Отсутствует подключение к интернету. Пожалуйста, проверьте ваше соединение.');
+    }
+
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error('Не удалось подключиться к серверу. Пожалуйста, проверьте ваше интернет-соединение или попробуйте позже.');
+    }
+
     throw error;
   }
 };
@@ -223,6 +259,8 @@ export const useAuth = () => {
       setIsLoading(true);
       setError(null);
 
+      console.log('Начало процесса регистрации');
+
       if (!validateEmail(data.email)) {
         throw new Error('Некорректный email');
       }
@@ -235,34 +273,51 @@ export const useAuth = () => {
         throw new Error('Пароли не совпадают');
       }
 
+      const requestData = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        confirm_password: data.confirmPassword
+      };
+
+      console.log('Подготовленные данные для регистрации:', {
+        ...requestData,
+        password: '***',
+        confirm_password: '***'
+      });
+
       const response = await fetchWithTimeout(
         `${API_URL}/auth/register`,
         {
           ...fetchConfig,
           method: 'POST',
-          body: JSON.stringify({
-            name: data.name,
-            email: data.email,
-            password: data.password,
-            confirm_password: data.confirmPassword
-          })
+          body: JSON.stringify(requestData)
         },
-        15000 // увеличиваем таймаут до 15 секунд для регистрации
+        15000
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Ошибка при регистрации');
+      console.log('Успешный ответ от сервера');
+      
+      const responseData = await response.json();
+      console.log('Полученные данные:', {
+        ...responseData,
+        token: responseData.token ? '***' : undefined
+      });
+
+      if (!responseData.token || !responseData.user) {
+        throw new Error('Сервер вернул неполные данные');
       }
 
-      const { token, user } = await response.json();
-      
-      localStorage.setItem('authToken', token);
-      setUser(user);
+      localStorage.setItem('authToken', responseData.token);
+      setUser(responseData.user);
       setIsAuthenticated(true);
+      
+      console.log('Регистрация успешно завершена');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Произошла ошибка при регистрации');
-      throw err;
+      console.error('Ошибка при регистрации:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Произошла неизвестная ошибка при регистрации';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }

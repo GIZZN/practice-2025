@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://92.246.76.171:8080/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://92.246.76.171:8080/api';
 
 // Обновляем конфигурацию для fetch запросов
 const fetchConfig = {

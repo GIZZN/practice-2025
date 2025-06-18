@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -98,8 +99,5 @@ func main() {
 	}
 
 	fmt.Printf("Server is running on port %s...\n", port)
-	log.Fatal(http.ListenAndServeTLS(":"+port,
-		"/etc/letsencrypt/live/92.246.76.171/fullchain.pem",
-		"/etc/letsencrypt/live/92.246.76.171/privkey.pem",
-		router))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

@@ -6,8 +6,6 @@ services:
     container_name: delivery_app
     restart: unless-stopped
     network_mode: "host"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
       - DB_HOST=localhost
       - DB_PORT=5432
@@ -16,4 +14,4 @@ services:
       - DB_NAME=delivery_service
       - JWT_SECRET=SosIk
       - PORT=8080
-      - ALLOWED_ORIGINS=http://localhost:3000,https://practice-2025.vercel.app,https://practice-2025-git-main.vercel.app,https://practice-2025-*.vercel.app,https://92.246.76.171:8080
+      - ALLOWED_ORIGINS=http://localhost:3000,https://practice-2025.vercel.app,https://practice-2025-git-main.vercel.app,https://practice-2025-*.vercel.app,http://92.246.76.171:8080

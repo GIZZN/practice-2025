@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"delivery-service/db"
 	"delivery-service/handlers"
 	"delivery-service/middleware"
@@ -48,27 +49,33 @@ func main() {
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
-
-			// Проверяем origin на соответствие разрешенным доменам
 			allowed := false
-			for _, allowedOrigin := range allowedOrigins {
-				// Проверка на wildcard домены
-				if strings.Contains(allowedOrigin, "*") {
-					pattern := strings.Replace(allowedOrigin, "*", ".*", -1)
-					if strings.HasPrefix(origin, strings.Split(pattern, ".*")[0]) {
+
+			// Всегда разрешаем vercel.app
+			if strings.Contains(origin, "vercel.app") {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				allowed = true
+			} else {
+				// Проверяем origin на соответствие разрешенным доменам
+				for _, allowedOrigin := range allowedOrigins {
+					// Проверка на wildcard домены
+					if strings.Contains(allowedOrigin, "*") {
+						pattern := strings.Replace(allowedOrigin, "*", ".*", -1)
+						if strings.HasPrefix(origin, strings.Split(pattern, ".*")[0]) {
+							allowed = true
+							w.Header().Set("Access-Control-Allow-Origin", origin)
+							break
+						}
+					} else if origin == allowedOrigin {
 						allowed = true
 						w.Header().Set("Access-Control-Allow-Origin", origin)
 						break
 					}
-				} else if origin == allowedOrigin {
-					allowed = true
-					w.Header().Set("Access-Control-Allow-Origin", origin)
-					break
 				}
-			}
 
-			if !allowed {
-				log.Printf("Blocked request from unauthorized origin: %s", origin)
+				if !allowed {
+					log.Printf("Blocked request from unauthorized origin: %s", origin)
+				}
 			}
 
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
@@ -98,6 +105,29 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Printf("Server is running on port %s...\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	// Определяем режим работы: HTTP или HTTPS
+	useHTTPS := os.Getenv("USE_HTTPS")
+	certFile := os.Getenv("CERT_FILE")
+	keyFile := os.Getenv("KEY_FILE")
+
+	if useHTTPS == "true" && certFile != "" && keyFile != "" {
+		// Создаем TLS конфигурацию
+		tlsConfig := &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
+
+		// Создаем HTTPS сервер
+		server := &http.Server{
+			Addr:      ":" + port,
+			Handler:   router,
+			TLSConfig: tlsConfig,
+		}
+
+		fmt.Printf("HTTPS Server is running on port %s...\n", port)
+		log.Fatal(server.ListenAndServeTLS(certFile, keyFile))
+	} else {
+		// Запускаем HTTP сервер
+		fmt.Printf("HTTP Server is running on port %s...\n", port)
+		log.Fatal(http.ListenAndServe(":"+port, router))
+	}
 }

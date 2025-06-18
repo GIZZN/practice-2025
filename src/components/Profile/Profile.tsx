@@ -47,7 +47,12 @@ interface SaveResponse {
   message: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://92.246.76.171:8080/api';
+// Проверяем, работаем ли мы на Vercel (HTTPS) или локально (HTTP)
+const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+// Используем прокси для Vercel, чтобы обойти проблему Mixed Content
+const API_URL = isVercel 
+  ? '/api/proxy' // Это будет прокси через Next.js API routes
+  : 'http://92.246.76.171:8080/api';
 
 // Обновляем конфигурацию для fetch запросов
 const fetchConfig = {
@@ -101,7 +106,12 @@ export const Profile = () => {
           throw new Error('Не авторизован');
         }
 
-        const response = await fetch(`${API_URL}/profile`, {
+        // Формируем URL в зависимости от того, используем ли мы прокси
+        const url = isVercel 
+          ? `${API_URL}?path=profile` 
+          : `${API_URL}/profile`;
+
+        const response = await fetch(url, {
           ...fetchConfig,
           headers: getAuthHeaders()
         });
@@ -167,7 +177,12 @@ export const Profile = () => {
         language: userData.language || null,
       };
 
-      const response = await fetch(`${API_URL}/profile`, {
+      // Формируем URL в зависимости от того, используем ли мы прокси
+      const url = isVercel 
+        ? `${API_URL}?path=profile` 
+        : `${API_URL}/profile`;
+
+      const response = await fetch(url, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(updateData)

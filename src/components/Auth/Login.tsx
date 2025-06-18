@@ -25,9 +25,14 @@ export const Login = () => {
     }
 
     try {
+      console.log('Начало процесса входа');
+      console.log('Данные для входа:', { email: formData.email, password: '***' });
+
       await login(formData);
+      console.log('Вход выполнен успешно, перенаправление на профиль');
       router.replace('/profile');
     } catch (err) {
+      console.error('Ошибка при входе:', err);
       if (err instanceof Error) {
         setFormError(err.message);
       } else {

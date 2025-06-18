@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react';
 
-// Всегда используем HTTP вместо HTTPS, так как бэкенд не настроен на HTTPS
-const API_URL = 'http://92.246.76.171:8080/api';
+// Проверяем, работаем ли мы на Vercel (HTTPS) или локально (HTTP)
+const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+// Используем прокси для Vercel, чтобы обойти проблему Mixed Content
+const API_URL = isVercel 
+  ? '/api/proxy' // Это будет прокси через Next.js API routes
+  : 'http://92.246.76.171:8080/api';
 
 // Обновляем конфигурацию для fetch запросов
 const fetchConfig = {
@@ -168,7 +172,12 @@ export const useAuth = () => {
 
   const fetchUser = async (token: string) => {
     try {
-      const response = await fetch(`${API_URL}/profile`, {
+      // Формируем URL в зависимости от того, используем ли мы прокси
+      const url = isVercel 
+        ? `${API_URL}?path=profile` 
+        : `${API_URL}/profile`;
+      
+      const response = await fetch(url, {
         ...fetchConfig,
         headers: {
           ...fetchConfig.headers,
@@ -231,7 +240,14 @@ export const useAuth = () => {
         throw new Error('Пароль должен содержать минимум 8 символов');
       }
 
-      const response = await fetch(`${API_URL}/auth/login`, {
+      // Формируем URL в зависимости от того, используем ли мы прокси
+      const url = isVercel 
+        ? `${API_URL}?path=auth/login` 
+        : `${API_URL}/auth/login`;
+      
+      console.log('Отправка запроса на:', url);
+
+      const response = await fetch(url, {
         ...fetchConfig,
         method: 'POST',
         body: JSON.stringify(data)
@@ -287,8 +303,15 @@ export const useAuth = () => {
         confirm_password: '***'
       });
 
+      // Формируем URL в зависимости от того, используем ли мы прокси
+      const url = isVercel 
+        ? `${API_URL}?path=auth/register` 
+        : `${API_URL}/auth/register`;
+      
+      console.log('Отправка запроса на:', url);
+
       const response = await fetchWithTimeout(
-        `${API_URL}/auth/register`,
+        url,
         {
           ...fetchConfig,
           method: 'POST',
